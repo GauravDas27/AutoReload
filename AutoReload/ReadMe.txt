@@ -1,0 +1,1 @@
+﻿Automatically reload when taking a turn-ending action.
