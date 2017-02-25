@@ -3,6 +3,7 @@
 
 # User-specific files
 *.suo
+*.XCOM_suo
 *.user
 *.userosscache
 *.sln.docstates
