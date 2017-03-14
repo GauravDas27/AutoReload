@@ -14,8 +14,6 @@ static function X2AbilityTemplate AutoReloadAbility()
 	local X2AbilityTemplateManager AbilityTemplateMan;
 	local X2AbilityTemplate ReloadTemplate;
 	local X2AbilityTemplate Template;
-	local X2AbilityTrigger_Event Trigger;
-	local X2AbilityTrigger_EventListener EventListener;
 
 	AbilityTemplateMan = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
 	ReloadTemplate = AbilityTemplateMan.FindAbilityTemplate('Reload');
