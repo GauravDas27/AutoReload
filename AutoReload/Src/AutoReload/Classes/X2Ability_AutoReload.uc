@@ -22,6 +22,7 @@ static function X2AbilityTemplate AutoReloadAbility()
 	Template.SetTemplateName('AutoReload');
 
 	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_INPUT_NONE;
+	Template.AbilityCosts.Length = 0;
 	Template.AbilityTriggers.Length = 0;
 
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
