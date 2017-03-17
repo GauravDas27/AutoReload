@@ -12,18 +12,14 @@ class X2DownloadableContentInfo_AutoReload extends X2DownloadableContentInfo;
 
 static event OnPostTemplatesCreated()
 {
-	local X2ItemTemplateManager ItpMan;
-	local X2DataTemplate DataTp;
-	local X2WeaponTemplate WeaponTp;
+	local X2AbilityTemplateManager AbilityTemplateManager;
+	local array<X2AbilityTemplate> AbilityTemplates;
+	local X2AbilityTemplate AbilityTemplate;
 
-	ItpMan = class'X2ItemTemplateManager'.static.GetItemTemplateManager();
-	foreach ItpMan.IterateTemplates(DataTp, None)
+	AbilityTemplateManager = class 'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	AbilityTemplateManager.FindAbilityTemplateAllDifficulties('Reload', AbilityTemplates);
+	foreach AbilityTemplates(AbilityTemplate)
 	{
-		WeaponTp = X2WeaponTemplate(DataTp);
-		if (WeaponTp == None || WeaponTp.InventorySlot != eInvSlot_PrimaryWeapon || WeaponTp.Abilities.Find('Reload') == INDEX_NONE)
-		{
-			continue;
-		}
-		WeaponTp.Abilities.AddItem('AutoReload');
+		AbilityTemplate.AdditionalAbilities.AddItem('AutoReload');
 	}
 }
