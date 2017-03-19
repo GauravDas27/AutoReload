@@ -1,5 +1,8 @@
 class X2Ability_AutoReload extends X2Ability;
 
+var const name ReloadTemplateName;
+var const name AutoReloadTemplateName;
+
 static function array<X2DataTemplate> CreateTemplates()
 {
 	local array<X2DataTemplate> Templates;
@@ -11,15 +14,15 @@ static function array<X2DataTemplate> CreateTemplates()
 
 static function X2AbilityTemplate AutoReloadAbility()
 {
-	local X2AbilityTemplateManager AbilityTemplateMan;
+	local X2AbilityTemplateManager AbilityTemplateManager;
 	local X2AbilityTemplate ReloadTemplate;
 	local X2AbilityTemplate Template;
 
-	AbilityTemplateMan = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-	ReloadTemplate = AbilityTemplateMan.FindAbilityTemplate('Reload');
+	AbilityTemplateManager = class'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
+	ReloadTemplate = AbilityTemplateManager.FindAbilityTemplate(default.ReloadTemplateName);
 
-	Template = new(None, "AutoReload") class'X2AbilityTemplate' (ReloadTemplate);
-	Template.SetTemplateName('AutoReload');
+	Template = new(None, string(default.AutoReloadTemplateName)) class'X2AbilityTemplate' (ReloadTemplate);
+	Template.SetTemplateName(default.AutoReloadTemplateName);
 
 	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_INPUT_NONE;
 	Template.AbilityCosts.Length = 0;
@@ -39,4 +42,10 @@ static function XComGameState AutoReloadAbility_BuildGameState(XComGameStateCont
 {
 	`log("AutoReload: BuildGameState");
 	return `XCOMHISTORY.CreateNewGameState(true, Context);
+}
+
+defaultproperties
+{
+	ReloadTemplateName = "Reload"
+	AutoReloadTemplateName = "AutoReload"
 }

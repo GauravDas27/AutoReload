@@ -17,9 +17,9 @@ static event OnPostTemplatesCreated()
 	local X2AbilityTemplate AbilityTemplate;
 
 	AbilityTemplateManager = class 'X2AbilityTemplateManager'.static.GetAbilityTemplateManager();
-	AbilityTemplateManager.FindAbilityTemplateAllDifficulties('Reload', AbilityTemplates);
+	AbilityTemplateManager.FindAbilityTemplateAllDifficulties(class'X2Ability_AutoReload'.default.ReloadTemplateName, AbilityTemplates);
 	foreach AbilityTemplates(AbilityTemplate)
 	{
-		AbilityTemplate.AdditionalAbilities.AddItem('AutoReload');
+		AbilityTemplate.AdditionalAbilities.AddItem(class'X2Ability_AutoReload'.default.AutoReloadTemplateName);
 	}
 }
