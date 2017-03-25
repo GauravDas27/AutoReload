@@ -115,6 +115,8 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (Context.InterruptionStatus != eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // AutoReload only handles interrupts
 	if (Context.ResultContext.InterruptionStep != 0) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
 
+	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt; // ability will not end unit turn
+
 	// we should not AutoReload if a free action (hair trigger) procs
 	// it is not possible to determine free action proc in an interrupt
 	// we simply skip the event; RetroReload will trigger post interrupt
@@ -157,7 +159,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	// fetch unit state after ability corresponding to this event is applied
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
-	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt;
+	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // ability did not end turn unit turn
 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
