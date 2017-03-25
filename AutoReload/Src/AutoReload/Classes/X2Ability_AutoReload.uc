@@ -130,7 +130,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
 
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
-	if (Unit != None && Unit.NumAlLActionPoints() > 0) // unit turn has not ended
+	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // unit turn has not ended
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
