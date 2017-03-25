@@ -180,7 +180,8 @@ static function bool IsUnitAllowed(XComGameState_Unit Unit)
 static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 {
 	if (Ability == None) return false; // no ability
-	if (Ability.GetMyTemplateName() == default.AutoReloadTemplateName) return false; // prevent autoreload infinite loops
+	if (Ability.GetMyTemplateName() == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
+	if (Ability.GetMyTemplateName() == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
 	return true;
 }
 
