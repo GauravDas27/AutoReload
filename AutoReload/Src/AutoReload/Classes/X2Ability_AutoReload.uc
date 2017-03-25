@@ -98,19 +98,84 @@ static function XComGameState RetroReload_BuildGameState(XComGameStateContext Co
 	return `XCOMHISTORY.CreateNewGameState(true, Context);
 }
 
-static function EventListenerReturn AutoReload_AbilityActivatedListener(Object EventData, Object EventSource, XComGameState GameState, Name EventID)
+static function EventListenerReturn AutoReload_AbilityActivatedListener(Object EventData, Object EventSource, XComGameState GameState, name EventID)
+{
+	local XComGameState_Unit Unit;
+	local XComGameState_Ability Ability;
+	local XComGameStateContext_Ability Context;
+
+	Unit = XComGameState_Unit(EventSource);
+	Ability = XComGameState_Ability(EventData);
+	if (!IsEventValid(Unit, Ability, GameState)) return ELR_NoInterrupt;
+
+	Context = XComGameStateContext_Ability(GameState.GetContext());
+	if (!IsInterrupt(Context)) return ELR_NoInterrupt; // AutoReload only handles interrupts
+	if (!IsZerothInterruptStep(Context)) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
+
+	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
+	return ELR_NoInterrupt;
+}
+
+static function EventListenerReturn RetroReload_AbilityActivatedListener(Object EventData, Object EventSource, XComGameState GameState, name EventID)
+{
+	local XComGameState_Unit Unit;
+	local XComGameState_Ability Ability;
+	local XComGameStateContext_Ability Context;
+
+	Unit = XComGameState_Unit(EventSource);
+	Ability = XComGameState_Ability(EventData);
+	if (!IsEventValid(Unit, Ability, GameState)) return ELR_NoInterrupt;
+
+	Context = XComGameStateContext_Ability(GameState.GetContext());
+	if (IsInterrupt(Context)) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
+
+	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
+	return ELR_NoInterrupt;
+}
+
+static function EventListenerReturn RetroReload_TriggerListener(Object EventData, Object EventSource, XComGameState GameState, name EventID)
 {
 	return ELR_NoInterrupt;
 }
 
-static function EventListenerReturn RetroReload_AbilityActivatedListener(Object EventData, Object EventSource, XComGameState GameState, Name EventID)
+static function bool IsEventValid(XComGameState_Unit Unit, XComGameState_Ability Ability, XComGameState GameState)
 {
-	return ELR_NoInterrupt;
+	local XComGameStateContext_Ability Context;
+
+	if (Unit == None) return false; // bad event
+	if (Ability == None) return false; // bad event
+	if (GameState == None) return false; // bad event
+
+	Context = XComGameStateContext_Ability(GameState.GetContext());
+	if (Context == None) return false; // bad event
+	if (Ability.ObjectID != Context.InputContext.AbilityRef.ObjectID) return false; // bad event
+
+	return true;
 }
 
-static function EventListenerReturn RetroReload_TriggerListener(Object EventData, Object EventSource, XComGameState GameState, Name EventID)
+static function bool IsInterrupt(XComGameStateContext_Ability Context)
 {
-	return ELR_NoInterrupt;
+	return Context.InterruptionStatus == eInterruptionStatus_Interrupt;
+}
+
+static function bool IsZerothInterruptStep(XComGameStateContext_Ability Context)
+{
+	return Context.ResultContext.InterruptionStep == 0;
+}
+
+// helper to retrieve a unit's ability state
+static function XComGameState_Ability GetAbility(XComGameState_Unit Unit, name AbilityTemplateName)
+{
+	return XComGameState_Ability(GetStateObject(Unit.FindAbility(AbilityTemplateName).ObjectID));
+}
+
+// helper to retrieve the latest state object from history
+static function XComGameState_BaseObject GetStateObject(int ObjectID, optional XComGameState_BaseObject DefaultObject = None)
+{
+	local XComGameState_BaseObject StateObject;
+
+	StateObject = ObjectID == 0 ? None : `XCOMHISTORY.GetGameStateForObjectID(ObjectID);
+	return StateObject == None ? DefaultObject : StateObject;
 }
 
 defaultproperties
