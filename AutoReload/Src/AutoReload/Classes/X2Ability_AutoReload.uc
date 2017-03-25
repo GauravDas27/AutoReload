@@ -109,8 +109,8 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (!IsEventValid(Unit, Ability, GameState)) return ELR_NoInterrupt;
 
 	Context = XComGameStateContext_Ability(GameState.GetContext());
-	if (!IsInterrupt(Context)) return ELR_NoInterrupt; // AutoReload only handles interrupts
-	if (!IsZerothInterruptStep(Context)) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
+	if (Context.InterruptionStatus != eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // AutoReload only handles interrupts
+	if (Context.ResultContext.InterruptionStep != 0) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
 
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -127,7 +127,10 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (!IsEventValid(Unit, Ability, GameState)) return ELR_NoInterrupt;
 
 	Context = XComGameStateContext_Ability(GameState.GetContext());
-	if (IsInterrupt(Context)) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
+	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
+
+	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
+	if (Unit != None && Unit.NumAlLActionPoints() > 0) // unit turn has not ended
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -151,16 +154,6 @@ static function bool IsEventValid(XComGameState_Unit Unit, XComGameState_Ability
 	if (Ability.ObjectID != Context.InputContext.AbilityRef.ObjectID) return false; // bad event
 
 	return true;
-}
-
-static function bool IsInterrupt(XComGameStateContext_Ability Context)
-{
-	return Context.InterruptionStatus == eInterruptionStatus_Interrupt;
-}
-
-static function bool IsZerothInterruptStep(XComGameStateContext_Ability Context)
-{
-	return Context.ResultContext.InterruptionStep == 0;
 }
 
 // helper to retrieve a unit's ability state
