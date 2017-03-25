@@ -131,6 +131,10 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
 	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
+	// validation for ability and target conditions
+	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
 }
@@ -165,6 +169,10 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot RetroReload
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
 	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
+
+	// validation for ability and target conditions
+	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
