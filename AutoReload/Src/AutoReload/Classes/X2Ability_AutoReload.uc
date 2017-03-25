@@ -146,6 +146,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
+	`XCOMGAME.GameRuleset.SubmitGameStateContext(ReloadContext);
 	return ELR_NoInterrupt;
 }
 
