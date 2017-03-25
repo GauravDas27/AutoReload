@@ -129,7 +129,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName, eReturnType_Copy);
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot AutoReload
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
-	if (!IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
+	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -164,7 +164,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	ReloadAbility = GetAbility(Unit, default.RetroReloadTemplateName, eReturnType_Copy);
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot RetroReload
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
-	if (!IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
+	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -251,10 +251,10 @@ static function bool IsFreeReloadPresent(XComGameState_Item Weapon, XComGameStat
 	foreach WeaponUpgrades(WeaponUpgrade)
 	{
 		if (WeaponUpgrade.FreeReloadCostFn == None) continue;
-		if (WeaponUpgrade.FreeReloadCostFn(WeaponUpgrade, Ability, Unit)) return false;
+		if (WeaponUpgrade.FreeReloadCostFn(WeaponUpgrade, Ability, Unit)) return true;
 	}
 
-	return true;
+	return false;
 }
 
 // helper to retrieve a unit's ability state
