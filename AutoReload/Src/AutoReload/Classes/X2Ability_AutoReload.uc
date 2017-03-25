@@ -112,6 +112,13 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (Context.InterruptionStatus != eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // AutoReload only handles interrupts
 	if (Context.ResultContext.InterruptionStep != 0) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
 
+	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
+	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
+	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID));
+
+	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
+	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
 }
@@ -131,6 +138,13 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
 	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // unit turn has not ended
+
+	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
+	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
+	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID));
+
+	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
+	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -153,6 +167,20 @@ static function bool IsEventValid(XComGameState_Unit Unit, XComGameState_Ability
 	if (Context == None) return false; // bad event
 	if (Ability.ObjectID != Context.InputContext.AbilityRef.ObjectID) return false; // bad event
 
+	return true;
+}
+
+static function bool IsUnitAllowed(XComGameState_Unit Unit)
+{
+	if (Unit == None) return false; // no unit
+	if (Unit.GetTeam() != eTeam_XCom) return false; // unit team not allowed
+	return true;
+}
+
+static function bool IsAbilityAllowed(XComGameState_Ability Ability)
+{
+	if (Ability == None) return false; // no ability
+	if (Ability.GetMyTemplateName() == default.AutoReloadTemplateName) return false; // prevent autoreload infinite loops
 	return true;
 }
 
