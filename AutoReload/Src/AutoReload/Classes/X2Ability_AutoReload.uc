@@ -166,9 +166,10 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	Context = XComGameStateContext_Ability(GameState.GetContext());
 	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
 
-	// fetch unit state after ability corresponding to this event is applied
+	// fetch modified unit state after ability corresponding to this event is applied
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
-	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // ability did not end turn unit turn
+	if (Unit == None) return ELR_NoInterrupt; // unit was not modified
+	if (Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // ability did not end turn unit turn
 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
