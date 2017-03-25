@@ -104,6 +104,9 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	local XComGameState_Ability Ability;
 	local XComGameStateContext_Ability Context;
 
+	local XComGameState_Ability ReloadAbility;
+	local XComGameState_Item ReloadWeapon;
+
 	Unit = XComGameState_Unit(EventSource);
 	Ability = XComGameState_Ability(EventData);
 	if (!IsEventValid(Unit, Ability, GameState)) return ELR_NoInterrupt;
@@ -115,9 +118,13 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID));
-
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+
+	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName);
+	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot AutoReload
+	ReloadWeapon = ReloadAbility.GetSourceWeapon();
+	if (!IsWeaponAllowed(ReloadWeapon, Unit)) return ELR_NoInterrupt;
 
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -128,6 +135,9 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	local XComGameState_Unit Unit;
 	local XComGameState_Ability Ability;
 	local XComGameStateContext_Ability Context;
+
+	local XComGameState_Ability ReloadAbility;
+	local XComGameState_Item ReloadWeapon;
 
 	Unit = XComGameState_Unit(EventSource);
 	Ability = XComGameState_Ability(EventData);
@@ -142,9 +152,13 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID));
-
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+
+	ReloadAbility = GetAbility(Unit, default.RetroReloadTemplateName);
+	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot RetroReload
+	ReloadWeapon = ReloadAbility.GetSourceWeapon();
+	if (!IsWeaponAllowed(ReloadWeapon, Unit)) return ELR_NoInterrupt;
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
 	return ELR_NoInterrupt;
@@ -182,6 +196,26 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	if (Ability == None) return false; // no ability
 	if (Ability.GetMyTemplateName() == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (Ability.GetMyTemplateName() == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
+	return true;
+}
+
+static function bool IsWeaponAllowed(XComGameState_Item Weapon, XComGameState_Unit Unit)
+{
+	local array<X2WeaponUpgradeTemplate> WeaponUpgrades;
+	local X2WeaponUpgradeTemplate WeaponUpgrade;
+	local UnitValue FreeReloadValue;
+
+	if (Weapon == None) return false; // no weapon
+
+	WeaponUpgrades = Weapon.GetMyWeaponUpgradeTemplates();
+	foreach WeaponUpgrades(WeaponUpgrade)
+	{
+		if (WeaponUpgrade.FreeReloadCostFn == None) continue;
+		if (WeaponUpgrade.NumFreeReloads <= 0) return false; // weapon has infinte free reloads
+		Unit.GetUnitValue('FreeReload', FreeReloadValue);
+		if (FreeReloadValue.fValue < WeaponUpgrade.NumFreeReloads) return false; // free reload limit not reached
+	}
+
 	return true;
 }
 
