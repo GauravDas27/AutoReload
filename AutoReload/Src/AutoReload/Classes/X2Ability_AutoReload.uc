@@ -44,6 +44,8 @@ static function X2AbilityTemplate AutoReloadAbility()
 	Template = ModReloadAbility(default.AutoReloadTemplateName);
 
 	Template.BuildNewGameStateFn = AutoReload_BuildGameState;
+
+	return Template;
 }
 
 static function X2AbilityTemplate RetroReloadAbility()
@@ -53,6 +55,8 @@ static function X2AbilityTemplate RetroReloadAbility()
 	Template = ModReloadAbility(default.RetroReloadTemplateName);
 
 	Template.BuildNewGameStateFn = RetroReload_BuildGameState;
+
+	return Template;
 }
 
 static function XComGameState AutoReload_BuildGameState(XComGameStateContext Context)
