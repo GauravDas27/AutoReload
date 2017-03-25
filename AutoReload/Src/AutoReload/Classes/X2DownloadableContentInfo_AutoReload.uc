@@ -21,5 +21,6 @@ static event OnPostTemplatesCreated()
 	foreach AbilityTemplates(AbilityTemplate)
 	{
 		AbilityTemplate.AdditionalAbilities.AddItem(class'X2Ability_AutoReload'.default.AutoReloadTemplateName);
+		AbilityTemplate.AdditionalAbilities.AddItem(class'X2Ability_AutoReload'.default.RetroReloadTemplateName);
 	}
 }
