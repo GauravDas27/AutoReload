@@ -115,6 +115,11 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (Context.InterruptionStatus != eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // AutoReload only handles interrupts
 	if (Context.ResultContext.InterruptionStep != 0) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
 
+	// we should not AutoReload if a free action (hair trigger) procs
+	// it is not possible to determine free action proc in an interrupt
+	// we simply skip the event; RetroReload will trigger post interrupt
+	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
+
 	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
@@ -146,8 +151,9 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	Context = XComGameStateContext_Ability(GameState.GetContext());
 	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
 
+	// fetch unit state after ability corresponding to this event is applied
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
-	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // unit turn has not ended
+	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt;
 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
@@ -182,6 +188,41 @@ static function bool IsEventValid(XComGameState_Unit Unit, XComGameState_Ability
 	if (Ability.ObjectID != Context.InputContext.AbilityRef.ObjectID) return false; // bad event
 
 	return true;
+}
+
+static function bool IsFreeFireActionPossible(XComGameState_Ability Ability)
+{
+	local XComGameState_Item Weapon;
+	local array<X2WeaponUpgradeTemplate> WeaponUpgrades;
+	local X2WeaponUpgradeTemplate WeaponUpgrade;
+	local bool FreeActionPossible;
+	local X2AbilityTemplate Template;
+	local X2AbilityCost AbilityCost;
+
+	Weapon = Ability.GetSourceWeapon();
+	if (Weapon == None) return false; // ability does not require a weapon
+
+	WeaponUpgrades = Weapon.GetMyWeaponUpgradeTemplates();
+	foreach WeaponUpgrades(WeaponUpgrade)
+	{
+		if (WeaponUpgrade.FreeFireCostFn != None)
+		{
+			FreeActionPossible = true;
+			break;
+		}
+	}
+	if (!FreeActionPossible) return false; // weapon does not have an upgrade which can allow free action
+
+	Template = Ability.GetMyTemplate();
+	foreach Template.AbilityCosts(AbilityCost)
+	{
+		if (AbilityCost.IsA('X2AbilityCost_ActionPoints') || AbilityCost.IsA('X2AbilityCost_ReserveActionPoints'))
+		{
+			if (!AbilityCost.bFreeCost) return true; // ability action point cost can be negated by a free action
+		}
+	}
+
+	return false; // ability cannot proc a free action
 }
 
 static function bool IsUnitAllowed(XComGameState_Unit Unit)
