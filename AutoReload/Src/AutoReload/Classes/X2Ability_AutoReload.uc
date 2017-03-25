@@ -244,9 +244,25 @@ static function bool IsUnitAllowed(XComGameState_Unit Unit)
 
 static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 {
+	local name TemplateName;
+	local X2AbilityTemplate Template;
+	local X2AbilityCost AbilityCost;
+	local X2AbilityCost_ActionPoints ActionPointsCost;
+
 	if (Ability == None) return false; // no ability
-	if (Ability.GetMyTemplateName() == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
-	if (Ability.GetMyTemplateName() == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
+
+	TemplateName = Ability.GetMyTemplateName();
+	Template = Ability.GetMyTemplate();
+
+	if (TemplateName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
+	if (TemplateName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
+
+	foreach Template.AbilityCosts(AbilityCost)
+	{
+		ActionPointsCost = X2AbilityCost_ActionPoints(AbilityCost);
+		if (ActionPointsCost.bMoveCost) return false; // never allow any abilities which have a move cost
+	}
+
 	return true;
 }
 
