@@ -260,6 +260,7 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	foreach Template.AbilityCosts(AbilityCost)
 	{
 		ActionPointsCost = X2AbilityCost_ActionPoints(AbilityCost);
+		if (ActionPointsCost == None) continue;
 		if (ActionPointsCost.bMoveCost) return false; // never allow any abilities which have a move cost
 	}
 
