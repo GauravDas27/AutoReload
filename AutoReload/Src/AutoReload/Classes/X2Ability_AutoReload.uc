@@ -123,7 +123,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 
 	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName);
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot AutoReload
-	ReloadWeapon = ReloadAbility.GetSourceWeapon();
+	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
 	if (!IsWeaponAllowed(ReloadWeapon, Unit)) return ELR_NoInterrupt;
 
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
@@ -157,7 +157,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	ReloadAbility = GetAbility(Unit, default.RetroReloadTemplateName);
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot RetroReload
-	ReloadWeapon = ReloadAbility.GetSourceWeapon();
+	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
 	if (!IsWeaponAllowed(ReloadWeapon, Unit)) return ELR_NoInterrupt;
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
