@@ -116,8 +116,8 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (Context.ResultContext.InterruptionStep != 0) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
 
 	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
-	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
-	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID));
+	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
+	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
 
@@ -150,8 +150,8 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (Unit != None && Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // unit turn has not ended
 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
-	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
-	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID));
+	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
+	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
 
@@ -226,11 +226,11 @@ static function XComGameState_Ability GetAbility(XComGameState_Unit Unit, name A
 }
 
 // helper to retrieve the latest state object from history
-static function XComGameState_BaseObject GetStateObject(int ObjectID, optional XComGameState_BaseObject DefaultObject = None)
+static function XComGameState_BaseObject GetStateObject(int ObjectID, optional EGameStateReturnType ReturnType=eReturnType_Reference, optional XComGameState_BaseObject DefaultObject = None)
 {
 	local XComGameState_BaseObject StateObject;
 
-	StateObject = ObjectID == 0 ? None : `XCOMHISTORY.GetGameStateForObjectID(ObjectID);
+	StateObject = ObjectID == 0 ? None : `XCOMHISTORY.GetGameStateForObjectID(ObjectID, ReturnType);
 	return StateObject == None ? DefaultObject : StateObject;
 }
 
