@@ -195,11 +195,19 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
+	`XEVENTMGR.TriggerEvent(default.RetroReloadTriggerEvent, ReloadContext, EventSource);
 	return ELR_NoInterrupt;
 }
 
 static function EventListenerReturn RetroReload_TriggerListener(Object EventData, Object EventSource, XComGameState GameState, name EventID)
 {
+	local XComGameStateContext_Ability Context;
+
+	Context = XComGameStateContext_Ability(EventData);
+	if (Context == None) return ELR_NoInterrupt; // bad event
+	if (Context.InputContext.AbilityTemplateName != default.RetroReloadTemplateName) return ELR_NoInterrupt; // bad event
+
+	`XCOMGAME.GameRuleset.SubmitGameStateContext(Context);
 	return ELR_NoInterrupt;
 }
 
