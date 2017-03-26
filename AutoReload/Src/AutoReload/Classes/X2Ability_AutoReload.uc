@@ -88,8 +88,28 @@ static function X2AbilityTemplate RetroReloadAbility()
 
 static function XComGameState AutoReload_BuildGameState(XComGameStateContext Context)
 {
-	`log("AutoReload: AR BuildGameState");
-	return `XCOMHISTORY.CreateNewGameState(true, Context);
+	local XComGameStateHistory History;
+	local XComGameState GameState;
+	local XComGameStateContext_Ability AbilityContext;
+	local XComGameState_Ability AbilityState;
+	local XComGameState_Unit UnitState;
+	local XComGameState_Item WeaponState;
+
+	History = `XCOMHISTORY;
+	GameState = History.CreateNewGameState(true, Context);
+	AbilityContext = XComGameStateContext_Ability(Context);
+	AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));
+	UnitState = XComGameState_Unit(GameState.CreateStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));	
+	WeaponState = XComGameState_Item(GameState.CreateStateObject(class'XComGameState_Item', AbilityState.SourceWeapon.ObjectID));
+
+	AbilityState.GetMyTemplate().ApplyCost(AbilityContext, AbilityState, UnitState, WeaponState, GameState);
+
+	WeaponState.Ammo = WeaponState.GetClipSize();
+	GameState.AddStateObject(UnitState);
+	GameState.AddStateObject(WeaponState);
+
+	`log("AutoReload: AR BuildGameState: Reloaded");
+	return GameState;
 }
 
 static function XComGameState RetroReload_BuildGameState(XComGameStateContext Context)
