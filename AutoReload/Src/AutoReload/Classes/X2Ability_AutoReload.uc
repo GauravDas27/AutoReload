@@ -121,21 +121,27 @@ static function RetroReload_ModifyGameState(XComGameState GameState, XComGameSta
 	local XComGameState_Ability AbilityState;
 	local XComGameState_Unit UnitState;
 	local XComGameState_Item WeaponState;
+
+	local XComGameState_Unit NewUnitState;
 	local XComGameState_Item NewWeaponState;
 
 	AbilityState = XComGameState_Ability(GetStateObject(AbilityContext.InputContext.AbilityRef.ObjectID));
 	UnitState = XComGameState_Unit(GetStateObject(AbilityContext.InputContext.SourceObject.ObjectID, eReturnType_Copy));
 	WeaponState = XComGameState_Item(GetStateObject(AbilityState.SourceWeapon.ObjectID, eReturnType_Copy));
 
-	// TODO : check what part of X2AbilityTemplate.ApplyCost needs to be performed
-	// AbilityState.GetMyTemplate().ApplyCost(AbilityContext, AbilityState, UnitState, WeaponState, GetStateCopy());
-
+	NewUnitState = XComGameState_Unit(GameState.CreateStateObject(class'XComGameState_Unit', UnitState.ObjectID));
 	NewWeaponState = XComGameState_Item(GameState.CreateStateObject(class'XComGameState_Item', WeaponState.ObjectID));
+
+	// unit does not have any action points but other AbilityCosts can still modify the state
+	ApplyCost(AbilityContext, AbilityState, NewUnitState, NewWeaponState, GameState);
+	PostApplyCost(AbilityContext, AbilityState, NewUnitState, NewWeaponState, GameState);
+
 	NewWeaponState.Ammo = NewWeaponState.GetClipSize() + NewWeaponState.Ammo - WeaponState.Ammo;
 	NewWeaponState.Ammo = Clamp(0, NewWeaponState.Ammo, NewWeaponState.GetClipSize());
+	GameState.AddStateObject(NewUnitState);
 	GameState.AddStateObject(NewWeaponState);
 
-	// send a event to trigger RetroReload and ensure that it's visualization is displayed
+	// send a event to trigger RetroReload and ensure that its visualization is displayed
 	`XEVENTMGR.TriggerEvent(default.RetroReloadTriggerEvent, AbilityContext, UnitState, GameState);
 }
 
@@ -397,7 +403,7 @@ static function bool CanAffordMove(X2AbilityCost_ActionPoints Cost, XComGameStat
 	return ActionPointCost <= ActionPointsAllowed;
 }
 
-// X2AbilityTemplate.ApplyCost does a lot of esoteric stuff so we use this function to purely apply AbilityCosts
+// X2AbilityTemplate.ApplyCost does a lot of esoteric stuff so we use this function to purely apply AbilityCosts; use only for RetroReload
 static function ApplyCost(XComGameStateContext_Ability Context, XComGameState_Ability Ability, XComGameState_Unit Unit, XComGameState_Item Weapon, XComGameState GameState)
 {
 	local X2AbilityTemplate Template;
@@ -407,6 +413,35 @@ static function ApplyCost(XComGameStateContext_Ability Context, XComGameState_Ab
 	foreach Template.AbilityCosts(AbilityCost)
 	{
 		AbilityCost.ApplyCost(Context, Ability, Unit, Weapon, GameState);
+	}
+}
+
+// call after ApplyCost; does stuff you expect X2AbilityTemplate.ApplyCost after processing AbilityCosts; use only for RetroReload
+static function PostApplyCost(XComGameStateContext_Ability Context, XComGameState_Ability Ability, XComGameState_Unit Unit, XComGameState_Item Weapon, XComGameState GameState)
+{
+	local X2AbilityTemplate Template;
+	local XComGameState_Unit PrevUnit;
+	local StateObjectReference EffectRef;
+	local XComGameState_Effect EffectState;
+	local X2Effect_Persistent Effect;
+
+	Template = Ability.GetMyTemplate();
+
+	if (Template.AbilityCooldown != None)
+	{
+		Template.AbilityCooldown.ApplyCooldown(Ability, Unit, Weapon, GameState);
+	}
+	
+	PrevUnit = XComGameState_Unit(GetStateObject(Unit.ObjectID));
+	foreach Unit.AffectedByEffects(EffectRef)
+	{
+		EffectState = XComGameState_Effect(GetStateObject(EffectRef.ObjectID));
+		if (EffectState == None) continue;
+		Effect = EffectState.GetX2Effect();
+		if (Effect.PostAbilityCostPaid(EffectState, Context, Ability, Unit, Weapon, GameState, PrevUnit.ActionPoints, PrevUnit.ReserveActionPoints))
+		{
+			break;
+		}
 	}
 }
 
