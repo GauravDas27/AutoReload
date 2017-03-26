@@ -160,7 +160,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 
 	// validation for X2AbilityTemplate.CanAfford
 	if (!CanAfford(ReloadContext, ReloadAbility, Unit)) return ELR_NoInterrupt; // unit cannot AutoReload
-	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, None); // this is safe because Reload does not have AbilityCosts which will modify GameState
+	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, GetStateCopy()); // all variables are copies so history will not be affected
 	if (!CanAfford(Context, Ability, Unit)) return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
 
 	// validation for XComGameState_Ability.CanActivateAbility ignoring costs
@@ -213,7 +213,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	// validation alternative for X2AbilityTemplate.CanAfford
 	if (!CanAfford(ReloadContext, ReloadAbility, Unit)) return ELR_NoInterrupt; // unit cannot RetroReload
-	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, None); // this is safe because Reload does not have AbilityCosts which will modify GameState
+	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, GetStateCopy()); // all variables are copies so history will not be affected
 	if (!CanAfford(Context, Ability, Unit)) return ELR_NoInterrupt; // not enough action points to trigger RetroReload before ability
 
 	// validation for XComGameState_Ability.CanActivateAbility ignoring costs
@@ -400,6 +400,12 @@ static function XComGameState_BaseObject GetStateObject(int ObjectID, optional E
 
 	StateObject = ObjectID == 0 ? None : `XCOMHISTORY.GetGameStateForObjectID(ObjectID, ReturnType);
 	return StateObject == None ? DefaultObject : StateObject;
+}
+
+// helper to retrieve a copy of a XComGameState which can be modified without affecting the history
+static function XComGameState GetStateCopy()
+{
+	return `XCOMHISTORY.GetGameStateFromHistory(, eReturnType_Copy);
 }
 
 defaultproperties
