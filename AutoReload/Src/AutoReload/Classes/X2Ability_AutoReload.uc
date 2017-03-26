@@ -127,6 +127,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	local XComGameState_Ability ReloadAbility;
 	local XComGameState_Item ReloadWeapon;
 	local XComGameStateContext_Ability ReloadContext;
+	local int ActionPointCost;
 
 	Unit = XComGameState_Unit(EventSource);
 	Ability = XComGameState_Ability(EventData);
@@ -157,12 +158,16 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
 	ReloadContext.bSkipValidation = true; // validation done manually
 
-	// validation for ability costs
-	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, GameState); // this is safe because Reload does not have AbilityCosts which will modify GameState
-	if (Ability.GetMyTemplate().CanAfford(Ability, Unit) != 'AA_Success') return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
+	// validation alternative for X2AbilityTemplate.CanAfford
+	ActionPointCost = 0;
+	ActionPointCost += GetActionPointCost(ReloadAbility, Unit);
+	ActionPointCost += GetActionPointCost(Ability, Unit);
+	if (ActionPointCost > Unit.NumAllActionPoints()) return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
 
-	// validation for ability and target conditions
+	// validation for XComGameState_Ability.CanActivateAbility excluding costs
 	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+
+	// validation for X2AbilityTemplate.CheckTargetConditions
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
 	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
@@ -179,6 +184,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	local XComGameState_Ability ReloadAbility;
 	local XComGameState_Item ReloadWeapon;
 	local XComGameStateContext_Ability ReloadContext;
+	local int ActionPointCost;
 
 	Unit = XComGameState_Unit(EventSource);
 	Ability = XComGameState_Ability(EventData);
@@ -206,12 +212,16 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
 	ReloadContext.bSkipValidation = true; // validation done manually
 
-	// validation for ability costs
-	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, GameState); // this is safe because Reload does not have AbilityCosts which will modify GameState
-	if (Ability.GetMyTemplate().CanAfford(Ability, Unit) != 'AA_Success') return ELR_NoInterrupt; // not enough action points to trigger RetroReload before ability
+	// validation alternative for X2AbilityTemplate.CanAfford
+	ActionPointCost = 0;
+	ActionPointCost += GetActionPointCost(ReloadAbility, Unit);
+	ActionPointCost += GetActionPointCost(Ability, Unit);
+	if (ActionPointCost > Unit.NumAllActionPoints()) return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
 
-	// validation for ability and target conditions
+	// validation for XComGameState_Ability.CanActivateAbility excluding costs
 	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+
+	// validation for X2AbilityTemplate.CheckTargetConditions
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
@@ -330,17 +340,23 @@ static function bool IsFreeReloadPresent(XComGameState_Item Weapon, XComGameStat
 	return false;
 }
 
-// X2AbilityTemplate.ApplyCost does a lot of esoteric stuff so we use this function to purely apply AbilityCosts
-static function ApplyCost(XComGameStateContext_Ability Context, XComGameState_Ability Ability, XComGameState_Unit Unit, XComGameState_Item Weapon, XComGameState GameState)
+// return action point cost for the given ability
+static function int GetActionPointCost(XComGameState_Ability Ability, XComGameState_Unit Unit)
 {
+	local int TotalPointCost;
 	local X2AbilityTemplate Template;
 	local X2AbilityCost AbilityCost;
+	local X2AbilityCost_ActionPoints ActionPointCost;
 
+	TotalPointCost = 0;
 	Template = Ability.GetMyTemplate();
 	foreach Template.AbilityCosts(AbilityCost)
 	{
-		AbilityCost.ApplyCost(Context, Ability, Unit, Weapon, GameState);
+		ActionPointCost = X2AbilityCost_ActionPoints(AbilityCost);
+		if (ActionPointCost == None) continue;
+		TotalPointCost += ActionPointCost.GetPointCost(Ability, Unit);
 	}
+	return TotalPointCost;
 }
 
 // helper to retrieve a unit's ability state
