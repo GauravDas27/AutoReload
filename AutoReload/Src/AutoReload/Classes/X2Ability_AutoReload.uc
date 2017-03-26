@@ -284,8 +284,10 @@ static function bool IsFreeFireActionPossible(XComGameState_Ability Ability)
 	local X2AbilityTemplate Template;
 	local X2AbilityCost AbilityCost;
 
+	if (!Ability.AllowFreeFireWeaponUpgrade()) return false; // ability cannot trigger a free action
+
 	Weapon = Ability.GetSourceWeapon();
-	if (Weapon == None) return false; // ability does not require a weapon
+	if (Weapon == None) return false; // ability does not have a weapon and cannot have free fire upgrade
 
 	WeaponUpgrades = Weapon.GetMyWeaponUpgradeTemplates();
 	foreach WeaponUpgrades(WeaponUpgrade)
