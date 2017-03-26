@@ -108,7 +108,6 @@ static function XComGameState AutoReload_BuildGameState(XComGameStateContext Con
 	GameState.AddStateObject(UnitState);
 	GameState.AddStateObject(WeaponState);
 
-	`log("AutoReload: AR BuildGameState: Reloaded");
 	return GameState;
 }
 
@@ -138,7 +137,6 @@ static function RetroReload_ModifyGameState(XComGameState GameState, XComGameSta
 
 	// send a event to trigger RetroReload and ensure that it's visualization is displayed
 	`XEVENTMGR.TriggerEvent(default.RetroReloadTriggerEvent, AbilityContext, UnitState, GameState);
-	`log("AutoReload: RR ModifyGameState: Reloaded");
 }
 
 static function EventListenerReturn AutoReload_AbilityActivatedListener(Object EventData, Object EventSource, XComGameState GameState, name EventID)
@@ -192,7 +190,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	// validation for X2AbilityTemplate.CheckTargetConditions
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
-	`log("AutoReload: AR Listener: " $ Context.InputContext.AbilityTemplateName);
+	`log("AutoReload: AR Triggering: " $ Context.InputContext.AbilityTemplateName);
 	`XCOMGAME.GameRuleset.SubmitGameStateContext(ReloadContext);
 	return ELR_NoInterrupt;
 }
@@ -245,7 +243,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	// validation for X2AbilityTemplate.CheckTargetConditions
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
-	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
+	`log("AutoReload: RR Triggering: " $ Context.InputContext.AbilityTemplateName);
 	RetroReload_ModifyGameState(GameState, ReloadContext);
 	return ELR_NoInterrupt;
 }
