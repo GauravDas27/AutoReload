@@ -146,6 +146,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
+
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
 
@@ -158,9 +159,9 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	ReloadContext.bSkipValidation = true; // validation done manually
 
 	// validation for X2AbilityTemplate.CanAfford
-	if (ReloadAbility.GetMyTemplate().CanAfford(ReloadAbility, Unit) != 'AA_Success') return ELR_NoInterrupt; // unit cannot AutoReload
+	if (!CanAfford(ReloadContext, ReloadAbility, Unit)) return ELR_NoInterrupt; // unit cannot AutoReload
 	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, None); // this is safe because Reload does not have AbilityCosts which will modify GameState
-	if (Ability.GetMyTemplate().CanAfford(Ability, Unit) != 'AA_Success') return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
+	if (!CanAfford(Context, Ability, Unit)) return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
 
 	// validation for XComGameState_Ability.CanActivateAbility ignoring costs
 	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
@@ -198,6 +199,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
+
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
 
@@ -210,9 +212,9 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	ReloadContext.bSkipValidation = true; // validation done manually
 
 	// validation alternative for X2AbilityTemplate.CanAfford
-	if (ReloadAbility.GetMyTemplate().CanAfford(ReloadAbility, Unit) != 'AA_Success') return ELR_NoInterrupt; // unit cannot RetroReload
+	if (!CanAfford(ReloadContext, ReloadAbility, Unit)) return ELR_NoInterrupt; // unit cannot RetroReload
 	ApplyCost(ReloadContext, ReloadAbility, Unit, ReloadWeapon, None); // this is safe because Reload does not have AbilityCosts which will modify GameState
-	if (Ability.GetMyTemplate().CanAfford(Ability, Unit) != 'AA_Success') return ELR_NoInterrupt; // not enough action points to trigger RetroReload before ability
+	if (!CanAfford(Context, Ability, Unit)) return ELR_NoInterrupt; // not enough action points to trigger RetroReload before ability
 
 	// validation for XComGameState_Ability.CanActivateAbility ignoring costs
 	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
@@ -297,25 +299,12 @@ static function bool IsUnitAllowed(XComGameState_Unit Unit)
 static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 {
 	local name TemplateName;
-	local X2AbilityTemplate Template;
-	local X2AbilityCost AbilityCost;
-	local X2AbilityCost_ActionPoints ActionPointsCost;
 
 	if (Ability == None) return false; // no ability
 
 	TemplateName = Ability.GetMyTemplateName();
-	Template = Ability.GetMyTemplate();
-
 	if (TemplateName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (TemplateName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
-
-	foreach Template.AbilityCosts(AbilityCost)
-	{
-		ActionPointsCost = X2AbilityCost_ActionPoints(AbilityCost);
-		if (ActionPointsCost == None) continue;
-		if (ActionPointsCost.bMoveCost) return false; // never allow any abilities which have a move cost
-	}
-
 	return true;
 }
 
@@ -334,6 +323,55 @@ static function bool IsFreeReloadPresent(XComGameState_Item Weapon, XComGameStat
 	}
 
 	return false;
+}
+
+static function bool CanAfford(XComGameStateContext_Ability Context, XComGameState_Ability Ability, XComGameState_Unit Unit)
+{
+	local X2AbilityTemplate Template;
+	local X2AbilityCost AbilityCost;
+	local X2AbilityCost_ActionPoints ActionPointCost;
+
+	Template = Ability.GetMyTemplate();
+	foreach Template.AbilityCosts(AbilityCost)
+	{
+		ActionPointCost = X2AbilityCost_ActionPoints(AbilityCost);
+		if (ActionPointCost != None && ActionPointCost.bMoveCost)
+		{
+			if (!CanAffordMove(ActionPointCost, Context, Ability, Unit)) return false;
+		}
+		else
+		{
+			if (AbilityCost.CanAfford(Ability, Unit) != 'AA_Success') return false;
+		}
+	}
+	return true;
+}
+
+// X2AbilityCost_ActionPoints.CanAfford does not take movement distance into account so we use this function
+static function bool CanAffordMove(X2AbilityCost_ActionPoints Cost, XComGameStateContext_Ability Context, XComGameState_Ability Ability, XComGameState_Unit Unit)
+{
+	local int i;
+	local int ActionPointsAllowed;
+	local int ActionPointCost;
+	local PathingInputData MovementPath;
+
+	ActionPointsAllowed = 0;
+	for (i = Cost.AllowedTypes.Length - 1; i >= 0; i--)
+	{
+		ActionPointsAllowed += Unit.NumActionPoints(Cost.AllowedTypes[i]);
+	}
+
+	if (Cost.ConsumeAllPoints(Ability, Unit))
+	{
+		ActionPointCost = Cost.GetPointCost(Ability, Unit); // X2AbilityCost_ActionPoints always returns 1 for moves
+	}
+	else
+	{
+		ActionPointCost = 1; // move always costs atleast one action point
+		MovementPath = Context.InputContext.MovementPaths[Context.GetMovePathIndex(Unit.ObjectID)];
+		ActionPointCost += MovementPath.CostIncreases.Length; // each cost increase element requires an action point
+	}
+	return ActionPointCost <= ActionPointsAllowed;
 }
 
 // X2AbilityTemplate.ApplyCost does a lot of esoteric stuff so we use this function to purely apply AbilityCosts
