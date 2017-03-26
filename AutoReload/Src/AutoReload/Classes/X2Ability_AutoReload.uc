@@ -99,7 +99,7 @@ static function XComGameState AutoReload_BuildGameState(XComGameStateContext Con
 	GameState = History.CreateNewGameState(true, Context);
 	AbilityContext = XComGameStateContext_Ability(Context);
 	AbilityState = XComGameState_Ability(History.GetGameStateForObjectID(AbilityContext.InputContext.AbilityRef.ObjectID));
-	UnitState = XComGameState_Unit(GameState.CreateStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));	
+	UnitState = XComGameState_Unit(GameState.CreateStateObject(class'XComGameState_Unit', AbilityContext.InputContext.SourceObject.ObjectID));
 	WeaponState = XComGameState_Item(GameState.CreateStateObject(class'XComGameState_Item', AbilityState.SourceWeapon.ObjectID));
 
 	AbilityState.GetMyTemplate().ApplyCost(AbilityContext, AbilityState, UnitState, WeaponState, GameState);
@@ -114,8 +114,31 @@ static function XComGameState AutoReload_BuildGameState(XComGameStateContext Con
 
 static function XComGameState RetroReload_BuildGameState(XComGameStateContext Context)
 {
-	`log("AutoReload: RR BuildGameState");
 	return `XCOMHISTORY.CreateNewGameState(true, Context);
+}
+
+static function RetroReload_ModifyGameState(XComGameState GameState, XComGameStateContext_Ability AbilityContext)
+{
+	local XComGameState_Ability AbilityState;
+	local XComGameState_Unit UnitState;
+	local XComGameState_Item WeaponState;
+	local XComGameState_Item NewWeaponState;
+
+	AbilityState = XComGameState_Ability(GetStateObject(AbilityContext.InputContext.AbilityRef.ObjectID));
+	UnitState = XComGameState_Unit(GetStateObject(AbilityContext.InputContext.SourceObject.ObjectID, eReturnType_Copy));
+	WeaponState = XComGameState_Item(GetStateObject(AbilityState.SourceWeapon.ObjectID, eReturnType_Copy));
+
+	// TODO : check what part of X2AbilityTemplate.ApplyCost needs to be performed
+	// AbilityState.GetMyTemplate().ApplyCost(AbilityContext, AbilityState, UnitState, WeaponState, GetStateCopy());
+
+	NewWeaponState = XComGameState_Item(GameState.CreateStateObject(class'XComGameState_Item', WeaponState.ObjectID));
+	NewWeaponState.Ammo = NewWeaponState.GetClipSize() + NewWeaponState.Ammo - WeaponState.Ammo;
+	NewWeaponState.Ammo = Clamp(0, NewWeaponState.Ammo, NewWeaponState.GetClipSize());
+	GameState.AddStateObject(NewWeaponState);
+
+	// send a event to trigger RetroReload and ensure that it's visualization is displayed
+	`XEVENTMGR.TriggerEvent(default.RetroReloadTriggerEvent, AbilityContext, UnitState, GameState);
+	`log("AutoReload: RR ModifyGameState: Reloaded");
 }
 
 static function EventListenerReturn AutoReload_AbilityActivatedListener(Object EventData, Object EventSource, XComGameState GameState, name EventID)
@@ -223,7 +246,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
 
 	`log("AutoReload: RR Listener: " $ Context.InputContext.AbilityTemplateName);
-	`XEVENTMGR.TriggerEvent(default.RetroReloadTriggerEvent, ReloadContext, EventSource);
+	RetroReload_ModifyGameState(GameState, ReloadContext);
 	return ELR_NoInterrupt;
 }
 
