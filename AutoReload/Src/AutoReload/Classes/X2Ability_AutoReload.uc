@@ -170,17 +170,13 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	// since this event is an interrupt action point cost has not yet been applied to unit
 	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt; // ability will not end unit turn
 
-	// we should not AutoReload if a free action (hair trigger) procs
-	// it is not possible to determine free action proc in an interrupt
-	// we simply skip the event; RetroReload will trigger post interrupt
-	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
-
 	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
 	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName, eReturnType_Copy);
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot AutoReload
@@ -234,6 +230,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
 	ReloadAbility = GetAbility(Unit, default.RetroReloadTemplateName, eReturnType_Copy);
 	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot RetroReload
