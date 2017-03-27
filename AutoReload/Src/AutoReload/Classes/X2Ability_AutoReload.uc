@@ -217,6 +217,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	Context = XComGameStateContext_Ability(GameState.GetContext());
 	if (Context.InterruptionStatus == eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // RetroReload only handles non-interrupts
+	if (IsResumeAfterAbility(Context, default.AutoReloadTemplateName)) return ELR_NoInterrupt; // do not attempt RetroReload if AutoReload was triggered
 
 	// fetch modified unit state after ability corresponding to this event is applied
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
@@ -279,6 +280,25 @@ static function bool IsEventValid(XComGameState_Unit Unit, XComGameState_Ability
 	if (Ability.ObjectID != Context.InputContext.AbilityRef.ObjectID) return false; // bad event
 
 	return true;
+}
+
+static function bool IsResumeAfterAbility(XComGameStateContext_Ability Context, name AbilityTemplateName)
+{
+	local XComGameStateHistory History;
+	local XComGameState HistoryState;
+	local XComGameStateContext_Ability HistoryContext;
+
+	if (Context.InterruptionStatus != eInterruptionStatus_Resume) return false;
+
+	History = `XCOMHISTORY;
+	HistoryState = History.GetGameStateFromHistory();
+	while (HistoryState.HistoryIndex >= Context.InterruptionHistoryIndex)
+	{
+		HistoryContext = XComGameStateContext_Ability(HistoryState.GetContext());
+		if (HistoryContext != None && HistoryContext.InputContext.AbilityTemplateName == AbilityTemplateName) return true;
+		HistoryState = HistoryState.GetPreviousGameState();
+	}
+	return false;
 }
 
 static function bool IsFreeFireActionPossible(XComGameState_Ability Ability)
