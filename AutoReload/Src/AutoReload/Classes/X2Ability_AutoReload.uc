@@ -1,4 +1,4 @@
-class X2Ability_AutoReload extends X2Ability;
+class X2Ability_AutoReload extends X2Ability config(AutoReload);
 
 var const name ReloadTemplateName;
 var const name AutoReloadTemplateName;
@@ -6,6 +6,8 @@ var const name RetroReloadTemplateName;
 
 var const name AbilityActivatedEvent;
 var const name RetroReloadTriggerEvent;
+
+var config array<name> ExcludeAbilities;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -354,6 +356,7 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	TemplateName = Ability.GetMyTemplateName();
 	if (TemplateName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (TemplateName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
+	if (default.ExcludeAbilities.Find(TemplateName) != INDEX_NONE) return false; // ability is not allowed in config file
 	return true;
 }
 
