@@ -9,6 +9,7 @@ var const name RetroReloadTriggerEvent;
 
 var config array<name> ExcludeAbilities;
 var config array<name> ExcludeUnitEffects;
+var config array<ETeam> AllowUnitTeams;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -346,13 +347,11 @@ static function bool IsUnitAllowed(XComGameState_Unit Unit)
 	local name EffectName;
 
 	if (Unit == None) return false; // no unit
-	if (Unit.GetTeam() != eTeam_XCom) return false; // unit team not allowed
-
+	if (default.AllowUnitTeams.Find(Unit.GetTeam()) == INDEX_NONE) return false; // unit team not present in config
 	foreach default.ExcludeUnitEffects(EffectName)
 	{
 		if (Unit.IsUnitAffectedByEffectName(EffectName)) return false; // unit has an effect which is not allowed in config
 	}
-
 	return true;
 }
 
