@@ -8,6 +8,7 @@ var const name AbilityActivatedEvent;
 var const name RetroReloadTriggerEvent;
 
 var config array<name> ExcludeAbilities;
+var config array<name> ExcludeUnitEffects;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -342,8 +343,16 @@ static function bool IsFreeFireActionPossible(XComGameState_Ability Ability)
 
 static function bool IsUnitAllowed(XComGameState_Unit Unit)
 {
+	local name EffectName;
+
 	if (Unit == None) return false; // no unit
 	if (Unit.GetTeam() != eTeam_XCom) return false; // unit team not allowed
+
+	foreach default.ExcludeUnitEffects(EffectName)
+	{
+		if (Unit.IsUnitAffectedByEffectName(EffectName)) return false; // unit has an effect which is not allowed in config
+	}
+
 	return true;
 }
 
@@ -356,7 +365,7 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	TemplateName = Ability.GetMyTemplateName();
 	if (TemplateName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (TemplateName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
-	if (default.ExcludeAbilities.Find(TemplateName) != INDEX_NONE) return false; // ability is not allowed in config file
+	if (default.ExcludeAbilities.Find(TemplateName) != INDEX_NONE) return false; // ability is not allowed in config
 	return true;
 }
 
