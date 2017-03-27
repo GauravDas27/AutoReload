@@ -220,7 +220,8 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	// since this event is a non-interrupt action point cost has already been applied to the unit in game state
 	Unit = XComGameState_Unit(GameState.GetGameStateForObjectID(Unit.ObjectID));
-	if (Unit == None || Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // unit was not modified or ability did not end turn unit turn
+	if (Unit == None) return ELR_NoInterrupt; // unit was not modified
+	if (Unit.NumAllActionPoints() > 0) return ELR_NoInterrupt; // ability did not end unit turn or some other listener refunded an action point
 
 	// fetch latest state objects from history; this is the state before ability corresponding to this event was activated
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
