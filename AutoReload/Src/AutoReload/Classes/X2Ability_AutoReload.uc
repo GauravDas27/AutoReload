@@ -167,15 +167,13 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (Context.InterruptionStatus != eInterruptionStatus_Interrupt) return ELR_NoInterrupt; // AutoReload only handles interrupts
 	if (Context.ResultContext.InterruptionStep != 0) return ELR_NoInterrupt; // check AutoReload for the first interrupt only
 
-	// since this event is an interrupt action point cost has not yet been applied to unit
-	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt; // ability will not end unit turn
-
 	// fetch latest state objects from history; changes by listeners which modify state objects but do not add them to history will get ignored
 	Unit = XComGameState_Unit(GetStateObject(Unit.ObjectID, eReturnType_Copy));
 	Ability = XComGameState_Ability(GetStateObject(Ability.ObjectID, eReturnType_Copy));
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt;
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
 	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName, eReturnType_Copy);
