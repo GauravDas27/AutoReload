@@ -7,9 +7,14 @@ var const name RetroReloadTemplateName;
 var const name AbilityActivatedEvent;
 var const name RetroReloadTriggerEvent;
 
-var config array<name> ExcludeAbilities;
-var config array<name> ExcludeUnitEffects;
+struct ExcludeUnitEffectData
+{
+	var name Effect;
+};
+
 var config array<ETeam> AllowUnitTeams;
+var config array<name> ExcludeAbilities;
+var config array<ExcludeUnitEffectData> ExcludeUnitEffects;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -173,6 +178,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+	if (!IsUnitEffectAllowed(Unit, Ability)) return ELR_NoInterrupt;
 	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt;
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
@@ -224,6 +230,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
+	if (!IsUnitEffectAllowed(Unit, Ability)) return ELR_NoInterrupt;
 	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt;
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
@@ -317,14 +324,8 @@ static function bool IsFreeFireActionPossible(XComGameState_Ability Ability)
 
 static function bool IsUnitAllowed(XComGameState_Unit Unit)
 {
-	local name EffectName;
-
 	if (Unit == None) return false; // no unit
 	if (default.AllowUnitTeams.Find(Unit.GetTeam()) == INDEX_NONE) return false; // unit team not present in config
-	foreach default.ExcludeUnitEffects(EffectName)
-	{
-		if (Unit.IsUnitAffectedByEffectName(EffectName)) return false; // unit has an effect which is not allowed in config
-	}
 	return true;
 }
 
@@ -338,6 +339,18 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	if (Template.DataName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (Template.DataName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
 	if (default.ExcludeAbilities.Find(Template.DataName) != INDEX_NONE) return false; // ability is not allowed in config
+	return true;
+}
+
+static function bool IsUnitEffectAllowed(XComGameState_Unit Unit, XComGameState_Ability Ability)
+{
+	local ExcludeUnitEffectData Exclude;
+
+	foreach default.ExcludeUnitEffects(Exclude)
+	{
+		if (Unit.IsUnitAffectedByEffectName(Exclude.Effect)) return false; // unit has an effect which is not allowed in config
+
+	}
 	return true;
 }
 
