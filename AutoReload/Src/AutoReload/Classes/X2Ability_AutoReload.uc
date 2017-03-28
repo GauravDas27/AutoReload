@@ -367,14 +367,12 @@ static function bool CanAfford(XComGameStateContext_Ability Context, XComGameSta
 	Template = Ability.GetMyTemplate();
 	foreach Template.AbilityCosts(AbilityCost)
 	{
+		if (AbilityCost.CanAfford(Ability, Unit) != 'AA_Success') return false;
+
 		ActionPointCost = X2AbilityCost_ActionPoints(AbilityCost);
 		if (ActionPointCost != None && ActionPointCost.bMoveCost)
 		{
 			if (!CanAffordMove(ActionPointCost, Context, Ability, Unit)) return false;
-		}
-		else
-		{
-			if (AbilityCost.CanAfford(Ability, Unit) != 'AA_Success') return false;
 		}
 	}
 	return true;
