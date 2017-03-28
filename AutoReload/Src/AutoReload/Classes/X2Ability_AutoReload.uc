@@ -8,7 +8,6 @@ var const name AbilityActivatedEvent;
 var const name RetroReloadTriggerEvent;
 
 var config array<name> ExcludeAbilities;
-var config array<name> ExcludeTargetingMethods;
 var config array<name> ExcludeUnitEffects;
 var config array<ETeam> AllowUnitTeams;
 
@@ -339,7 +338,6 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	if (Template.DataName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (Template.DataName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
 	if (default.ExcludeAbilities.Find(Template.DataName) != INDEX_NONE) return false; // ability is not allowed in config
-	if (default.ExcludeTargetingMethods.Find(Template.TargetingMethod.name) != INDEX_NONE) return false; //ability targeting method not allowed in config
 	return true;
 }
 
