@@ -10,6 +10,7 @@ var const name RetroReloadTriggerEvent;
 struct ExcludeUnitEffectData
 {
 	var name Effect;
+	var array<name> Abilities;
 };
 
 var config array<ETeam> AllowUnitTeams;
@@ -348,8 +349,9 @@ static function bool IsUnitEffectAllowed(XComGameState_Unit Unit, XComGameState_
 
 	foreach default.ExcludeUnitEffects(Exclude)
 	{
-		if (Unit.IsUnitAffectedByEffectName(Exclude.Effect)) return false; // unit has an effect which is not allowed in config
-
+		if (!Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
+		if (Exclude.Abilities.Length > 0 && Exclude.Abilities.Find(Ability.GetMyTemplateName()) == INDEX_NONE) continue;
+		return false;
 	}
 	return true;
 }
