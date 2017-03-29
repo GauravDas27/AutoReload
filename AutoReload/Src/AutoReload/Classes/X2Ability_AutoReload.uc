@@ -1,6 +1,7 @@
 class X2Ability_AutoReload extends X2Ability config(AutoReload);
 
-`define ExCheck(LookupArray, LookupName) (`LookupArray.Length > 0 && `LookupArray.Find(`LookupName) == INDEX_NONE)
+// if LookupArray has elements, LookupObj should either not exist or not be present in LookupArray
+`define ExAbsent(LookupArray, LookupObj) (`LookupArray.Length > 0 && (`LookupObj == None || `LookupArray.Find(`LookupObj.GetMyTemplateName()) == INDEX_NONE))
 
 var const name ReloadTemplateName;
 var const name AutoReloadTemplateName;
@@ -13,6 +14,9 @@ struct ExcludeData
 {
 	var name Effect;
 	var array<name> Abilities;
+	var array<name> Weapons;
+	var array<name> Ammo;
+	var array<name> Grenades;
 };
 
 var config array<ETeam> AllowUnitTeams;
@@ -350,11 +354,20 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ability Ability)
 {
 	local ExcludeData Exclude;
+	local XComGameState_Item Weapon;
+	local XComGameState_Item Ammo;
 
 	foreach default.Excludes(Exclude)
 	{
 		if (Exclude.Effect != '' && !Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
-		if (`ExCheck(Exclude.Abilities, Ability.GetMyTemplateName())) continue;
+		if (`ExAbsent(Exclude.Abilities, Ability)) continue;
+
+		Weapon = Ability.GetSourceWeapon();
+		Ammo = Ability.GetSourceAmmo();
+		if (`ExAbsent(Exclude.Weapons, Weapon)) continue;
+		if (`ExAbsent(Exclude.Ammo, Ammo)) continue;
+		if (`ExAbsent(Exclude.Grenades, Weapon) && `ExAbsent(Exclude.Grenades, Ammo)) continue;
+
 		return false;
 	}
 	return true;
