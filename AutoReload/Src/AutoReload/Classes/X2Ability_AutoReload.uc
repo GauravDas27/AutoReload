@@ -183,8 +183,8 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
 	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName, eReturnType_Copy);
-	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot AutoReload
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
+	if (ReloadWeapon == None) return ELR_NoInterrupt; // no weapon to AutoReload
 	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
@@ -235,8 +235,8 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
 	ReloadAbility = GetAbility(Unit, default.RetroReloadTemplateName, eReturnType_Copy);
-	if (ReloadAbility == None) return ELR_NoInterrupt; // unit cannot RetroReload
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
+	if (ReloadWeapon == None) return ELR_NoInterrupt; // no weapon to RetroReload
 	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
@@ -358,8 +358,6 @@ static function bool IsFreeReloadPresent(XComGameState_Item Weapon, XComGameStat
 {
 	local array<X2WeaponUpgradeTemplate> WeaponUpgrades;
 	local X2WeaponUpgradeTemplate WeaponUpgrade;
-
-	if (Weapon == None) return false; // no weapon
 
 	WeaponUpgrades = Weapon.GetMyWeaponUpgradeTemplates();
 	foreach WeaponUpgrades(WeaponUpgrade)
