@@ -14,7 +14,6 @@ struct ExcludeData
 };
 
 var config array<ETeam> AllowUnitTeams;
-var config array<name> ExcludeAbilities;
 var config array<ExcludeData> Excludes;
 
 static function array<X2DataTemplate> CreateTemplates()
@@ -179,7 +178,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
-	if (!IsUnitEffectAllowed(Unit, Ability)) return ELR_NoInterrupt;
+	if (!IsAllowedInConfig(Unit, Ability)) return ELR_NoInterrupt;
 	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt;
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
@@ -231,7 +230,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	if (!IsUnitAllowed(Unit)) return ELR_NoInterrupt;
 	if (!IsAbilityAllowed(Ability)) return ELR_NoInterrupt;
-	if (!IsUnitEffectAllowed(Unit, Ability)) return ELR_NoInterrupt;
+	if (!IsAllowedInConfig(Unit, Ability)) return ELR_NoInterrupt;
 	if (!Ability.GetMyTemplate().WillEndTurn(Ability, Unit)) return ELR_NoInterrupt;
 	if (!Unit.bGotFreeFireAction && IsFreeFireActionPossible(Ability)) return ELR_NoInterrupt;
 
@@ -339,17 +338,16 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 	Template = Ability.GetMyTemplate();
 	if (Template.DataName == default.AutoReloadTemplateName) return false; // prevent AutoReload infinite loops
 	if (Template.DataName == default.RetroReloadTemplateName) return false; // prevent RetroReload infinite loops
-	if (default.ExcludeAbilities.Find(Template.DataName) != INDEX_NONE) return false; // ability is not allowed in config
 	return true;
 }
 
-static function bool IsUnitEffectAllowed(XComGameState_Unit Unit, XComGameState_Ability Ability)
+static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ability Ability)
 {
 	local ExcludeData Exclude;
 
 	foreach default.Excludes(Exclude)
 	{
-		if (!Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
+		if (Exclude.Effect != '' && !Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
 		if (Exclude.Abilities.Length > 0 && Exclude.Abilities.Find(Ability.GetMyTemplateName()) == INDEX_NONE) continue;
 		return false;
 	}
