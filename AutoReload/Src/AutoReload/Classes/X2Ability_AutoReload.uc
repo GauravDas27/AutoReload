@@ -163,6 +163,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	local XComGameState_Ability ReloadAbility;
 	local XComGameState_Item ReloadWeapon;
 	local XComGameStateContext_Ability ReloadContext;
+	local X2AbilityTemplate ReloadTemplate;
 
 	Unit = XComGameState_Unit(EventSource);
 	Ability = XComGameState_Ability(EventData);
@@ -189,6 +190,7 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
 	ReloadContext.bSkipValidation = true; // validation done manually
+	ReloadTemplate = ReloadAbility.GetMyTemplate();
 
 	// validation for X2AbilityTemplate.CanAfford
 	if (!CanAfford(ReloadContext, ReloadAbility, Unit)) return ELR_NoInterrupt; // unit cannot AutoReload
@@ -196,10 +198,10 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	if (!CanAfford(Context, Ability, Unit)) return ELR_NoInterrupt; // not enough action points to trigger AutoReload before ability
 
 	// validation for XComGameState_Ability.CanActivateAbility ignoring costs
-	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt;
 
 	// validation for X2AbilityTemplate.CheckTargetConditions
-	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+	if (ReloadTemplate.CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt;
 
 	`log("AutoReload: AR Triggering: " $ Context.InputContext.AbilityTemplateName);
 	`XCOMGAME.GameRuleset.SubmitGameStateContext(ReloadContext);
@@ -215,6 +217,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	local XComGameState_Ability ReloadAbility;
 	local XComGameState_Item ReloadWeapon;
 	local XComGameStateContext_Ability ReloadContext;
+	local X2AbilityTemplate ReloadTemplate;
 
 	Unit = XComGameState_Unit(EventSource);
 	Ability = XComGameState_Ability(EventData);
@@ -241,6 +244,7 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
 	ReloadContext.bSkipValidation = true; // validation done manually
+	ReloadTemplate = ReloadAbility.GetMyTemplate();
 
 	// validation alternative for X2AbilityTemplate.CanAfford
 	if (!CanAfford(ReloadContext, ReloadAbility, Unit)) return ELR_NoInterrupt; // unit cannot RetroReload
@@ -248,10 +252,10 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	if (!CanAfford(Context, Ability, Unit)) return ELR_NoInterrupt; // not enough action points to trigger RetroReload before ability
 
 	// validation for XComGameState_Ability.CanActivateAbility ignoring costs
-	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+	if (ReloadAbility.CanActivateAbility(Unit, , true) != 'AA_Success') return ELR_NoInterrupt;
 
 	// validation for X2AbilityTemplate.CheckTargetConditions
-	if (ReloadAbility.GetMyTemplate().CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt; // don't need to autoreload
+	if (ReloadTemplate.CheckTargetConditions(ReloadAbility, Unit, Unit) != 'AA_Success') return ELR_NoInterrupt;
 
 	`log("AutoReload: RR Triggering: " $ Context.InputContext.AbilityTemplateName);
 	RetroReload_ModifyGameState(GameState, ReloadContext);
