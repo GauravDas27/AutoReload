@@ -1,5 +1,7 @@
 class X2Ability_AutoReload extends X2Ability config(AutoReload);
 
+`define ExCheck(LookupArray, LookupName) (`LookupArray.Length > 0 && `LookupArray.Find(`LookupName) == INDEX_NONE)
+
 var const name ReloadTemplateName;
 var const name AutoReloadTemplateName;
 var const name RetroReloadTemplateName;
@@ -352,7 +354,7 @@ static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ab
 	foreach default.Excludes(Exclude)
 	{
 		if (Exclude.Effect != '' && !Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
-		if (Exclude.Abilities.Length > 0 && Exclude.Abilities.Find(Ability.GetMyTemplateName()) == INDEX_NONE) continue;
+		if (`ExCheck(Exclude.Abilities, Ability.GetMyTemplateName())) continue;
 		return false;
 	}
 	return true;
