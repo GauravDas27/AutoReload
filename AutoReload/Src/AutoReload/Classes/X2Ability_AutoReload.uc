@@ -7,7 +7,7 @@ var const name RetroReloadTemplateName;
 var const name AbilityActivatedEvent;
 var const name RetroReloadTriggerEvent;
 
-struct ExcludeUnitEffectData
+struct ExcludeData
 {
 	var name Effect;
 	var array<name> Abilities;
@@ -15,7 +15,7 @@ struct ExcludeUnitEffectData
 
 var config array<ETeam> AllowUnitTeams;
 var config array<name> ExcludeAbilities;
-var config array<ExcludeUnitEffectData> ExcludeUnitEffects;
+var config array<ExcludeData> Excludes;
 
 static function array<X2DataTemplate> CreateTemplates()
 {
@@ -345,9 +345,9 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 
 static function bool IsUnitEffectAllowed(XComGameState_Unit Unit, XComGameState_Ability Ability)
 {
-	local ExcludeUnitEffectData Exclude;
+	local ExcludeData Exclude;
 
-	foreach default.ExcludeUnitEffects(Exclude)
+	foreach default.Excludes(Exclude)
 	{
 		if (!Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
 		if (Exclude.Abilities.Length > 0 && Exclude.Abilities.Find(Ability.GetMyTemplateName()) == INDEX_NONE) continue;
