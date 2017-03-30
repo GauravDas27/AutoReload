@@ -49,7 +49,9 @@ static function X2AbilityTemplate ModReloadAbility(name TemplateName)
 
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
 	Template.bShowActivation = true;
+	Template.bShowPostActivation = false;
 	Template.bSkipFireAction = true;
+	Template.ActivationSpeech = '';
 	Template.DefaultKeyBinding = class'UIUtilities_Input'.const.FXS_INPUT_NONE;
 
 	Template.BuildVisualizationFn = TypicalAbility_BuildVisualization;
