@@ -354,12 +354,18 @@ static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ab
 	local ExcludeData Exclude;
 	local bool Present;
 
+	local XComGameState_Item Weapon;
+	local XComGameState_Item Ammo;
+
 	foreach default.Excludes(Exclude)
 	{
+		Weapon = Ability.GetSourceWeapon();
+		Ammo = Ability.GetSourceAmmo();
+
 		Present = `ExEffect(Exclude.Effect, Unit)
 			&& `ExBaseObj(Ability, Exclude.Abilities)
-			&& `ExBaseObj(Ability.GetSourceWeapon(), Exclude.Weapons)
-			&& `ExBaseObj(Ability.GetSourceAmmo(), Exclude.Ammo)
+			&& `ExBaseObj(Weapon, Exclude.Weapons)
+			&& `ExBaseObj(Ammo, Exclude.Ammo)
 		;
 		if (Present) return false;
 	}
