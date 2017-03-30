@@ -15,7 +15,6 @@ struct ExcludeData
 	var array<name> Abilities;
 	var array<name> Weapons;
 	var array<name> Ammo;
-	var array<name> Grenades;
 };
 
 var config array<ETeam> AllowUnitTeams;
@@ -361,7 +360,6 @@ static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ab
 			&& `ExBaseObj(Ability, Exclude.Abilities)
 			&& `ExBaseObj(Ability.GetSourceWeapon(), Exclude.Weapons)
 			&& `ExBaseObj(Ability.GetSourceAmmo(), Exclude.Ammo)
-			&& (`ExBaseObj(Ability.GetSourceWeapon(), Exclude.Grenades) || `ExBaseObj(Ability.GetSourceAmmo(), Exclude.Grenades))
 		;
 		if (Present) return false;
 	}
