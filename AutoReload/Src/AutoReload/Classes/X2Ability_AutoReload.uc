@@ -15,6 +15,8 @@ struct ExcludeData
 	var array<name> Abilities;
 	var array<name> Weapons;
 	var array<name> Ammo;
+	var bool PrimaryOnly;
+	var array<EAbilityHostility> Hostility;
 };
 
 var config array<ETeam> AllowUnitTeams;
@@ -354,18 +356,24 @@ static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ab
 	local ExcludeData Exclude;
 	local bool Present;
 
+	local X2AbilityTemplate Template;
 	local XComGameState_Item Weapon;
 	local XComGameState_Item Ammo;
+	local XComGameState_Item Primary;
 
 	foreach default.Excludes(Exclude)
 	{
+		Template = Ability.GetMyTemplate();
 		Weapon = Ability.GetSourceWeapon();
 		Ammo = Ability.GetSourceAmmo();
+		Primary = Unit.GetPrimaryWeapon();
 
 		Present = `ExEffect(Exclude.Effect, Unit)
-			&& `ExBaseObj(Ability, Exclude.Abilities)
+			&& `ExLookup(Template.DataName, Exclude.Abilities)
 			&& `ExBaseObj(Weapon, Exclude.Weapons)
 			&& `ExBaseObj(Ammo, Exclude.Ammo)
+			&& `ExPrimary(Exclude.PrimaryOnly, Weapon, Primary)
+			&& `ExLookup(Template.Hostility, Exclude.Hostility)
 		;
 		if (Present) return false;
 	}

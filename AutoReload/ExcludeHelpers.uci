@@ -1,8 +1,11 @@
 // if LookupArray is non-empty, TempName must be part of the LookupArray
-`define ExLookup(TempName, LookupArray) (`LookupArray.Length <= 0 || `LookupArray.Find(`TempName) != INDEX_NONE)
+`define ExLookup(LookupObj, LookupArray) (`LookupArray.Length <= 0 || `LookupArray.Find(`LookupObj) != INDEX_NONE)
+
+// if BaseObj exists and LookupArray is non-empty, BaseObj.GetMyTemplateName() must be part of the LookupArray
+`define ExBaseObj(BaseObj, LookupArray) (`BaseObj == None || `ExLookup(`BaseObj.GetMyTemplateName(), `LookupArray))
 
 // if EffName is defined, UnitObj must be affected by the effect Effname
 `define ExEffect(EffectName, UnitObj) (`EffectName == '' || `UnitObj.IsUnitAffectedByEffectName(`EffectName))
 
-// if BaseObj exists and LookupArray is non-empty, BaseObj.GetMyTemplateName() must be part of the LookupArray
-`define ExBaseObj(BaseObj, LookupArray) (`BaseObj == None || `ExLookup(`BaseObj.GetMyTemplateName(), `LookupArray))
+// if Condition is true, Weapon and Primary have to be the same objects
+`define ExPrimary(Condition, Weapon, Primary) (!`Condition || (`Weapon != None && `Primary != None && `Weapon.ObjectID == `Primary.ObjectID))
