@@ -1,8 +1,8 @@
+// if LookupArray is non-empty, TempName must be part of the LookupArray
+`define ExLookup(TempName, LookupArray) (`LookupArray.Length <= 0 || `LookupArray.Find(`TempName) != INDEX_NONE)
+
 // if EffName is defined, UnitObj must be affected by the effect Effname
 `define ExEffect(EffectName, UnitObj) (`EffectName == '' || `UnitObj.IsUnitAffectedByEffectName(`EffectName))
 
-// if LookupArray is non-empty, TempName must be part of the LookupArray
-`define ExName(TempName, LookupArray) (`LookupArray.Length <= 0 || `LookupArray.Find(`TempName) != INDEX_NONE)
-
 // if BaseObj exists and LookupArray is non-empty, BaseObj.GetMyTemplateName() must be part of the LookupArray
-`define ExBaseObj(BaseObj, LookupArray) (`BaseObj == None || `ExName(`BaseObj.GetMyTemplateName(), `LookupArray))
+`define ExBaseObj(BaseObj, LookupArray) (`BaseObj == None || `ExLookup(`BaseObj.GetMyTemplateName(), `LookupArray))
