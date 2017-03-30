@@ -1,5 +1,5 @@
 // if EffName is defined, UnitObj must be affected by the effect Effname
-`define ExEffect(EffName, UnitObj) (`EffName != '' && `UnitObj.IsUnitAffectedByEffectName(`EffName))
+`define ExEffect(EffectName, UnitObj) (`EffectName == '' || `UnitObj.IsUnitAffectedByEffectName(`EffectName))
 
 // if LookupArray is non-empty, TempName must be part of the LookupArray
 `define ExName(TempName, LookupArray) (`LookupArray.Length <= 0 || `LookupArray.Find(`TempName) != INDEX_NONE)
