@@ -13,6 +13,7 @@ event name CallAbilityMeetsCondition(XComGameState_Ability kAbility, XComGameSta
 	if (kAbility == None) return 'AA_AbilityUnavailable';
 
 	History = `XCOMHISTORY;
+	// retrieve copies here because we do not want changes from calling FreeReloadCostFn to affect the history
 	Ability = XComGameState_Ability(History.GetGameStateForObjectID(kAbility.ObjectID, eReturnType_Copy));
 	Unit = XComGameState_Unit(History.GetGameStateForObjectID(kAbility.OwnerStateObject.ObjectID, eReturnType_Copy));
 	Weapon = XComGameState_Item(History.GetGameStateForObjectID(kAbility.SourceWeapon.ObjectID, eReturnType_Copy));
