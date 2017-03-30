@@ -19,6 +19,9 @@
     <Content Include="Config\XComAutoReload.ini">
       <SubType>Content</SubType>
     </Content>
+    <Content Include="ExcludeHelpers.uci">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="ReadMe.txt" />
     <Content Include="ModPreview.jpg" />
     <Content Include="Config\XComEditor.ini" />

@@ -1,7 +1,6 @@
 class X2Ability_AutoReload extends X2Ability config(AutoReload);
 
-// if LookupArray has elements, LookupObj should either not exist or not be present in LookupArray
-`define ExAbsent(LookupArray, LookupObj) (`LookupArray.Length > 0 && (`LookupObj == None || `LookupArray.Find(`LookupObj.GetMyTemplateName()) == INDEX_NONE))
+`include(ExcludeHelpers.uci)
 
 var const name ReloadTemplateName;
 var const name AutoReloadTemplateName;
@@ -354,21 +353,17 @@ static function bool IsAbilityAllowed(XComGameState_Ability Ability)
 static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ability Ability)
 {
 	local ExcludeData Exclude;
-	local XComGameState_Item Weapon;
-	local XComGameState_Item Ammo;
+	local bool Present;
 
 	foreach default.Excludes(Exclude)
 	{
-		if (Exclude.Effect != '' && !Unit.IsUnitAffectedByEffectName(Exclude.Effect)) continue;
-		if (`ExAbsent(Exclude.Abilities, Ability)) continue;
-
-		Weapon = Ability.GetSourceWeapon();
-		Ammo = Ability.GetSourceAmmo();
-		if (`ExAbsent(Exclude.Weapons, Weapon)) continue;
-		if (`ExAbsent(Exclude.Ammo, Ammo)) continue;
-		if (`ExAbsent(Exclude.Grenades, Weapon) && `ExAbsent(Exclude.Grenades, Ammo)) continue;
-
-		return false;
+		Present = `ExEffect(Exclude.Effect, Unit)
+			&& `ExBaseObj(Ability, Exclude.Abilities)
+			&& `ExBaseObj(Ability.GetSourceWeapon(), Exclude.Weapons)
+			&& `ExBaseObj(Ability.GetSourceAmmo(), Exclude.Ammo)
+			&& (`ExBaseObj(Ability.GetSourceWeapon(), Exclude.Grenades) || `ExBaseObj(Ability.GetSourceAmmo(), Exclude.Grenades))
+		;
+		if (Present) return false;
 	}
 	return true;
 }
