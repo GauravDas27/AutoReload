@@ -41,6 +41,8 @@ static function X2AbilityTemplate ModReloadAbility(name TemplateName)
 	Template = new(None, string(TemplateName)) class'X2AbilityTemplate' (Template);
 	Template.SetTemplateName(TemplateName);
 
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_AutoReload_FreeReload');
+
 	Template.AbilityTriggers.Length = 0;
 
 	Template.eAbilityIconBehaviorHUD = eAbilityIconBehavior_NeverShow;
@@ -190,7 +192,6 @@ static function EventListenerReturn AutoReload_AbilityActivatedListener(Object E
 	ReloadAbility = GetAbility(Unit, default.AutoReloadTemplateName, eReturnType_Copy);
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
 	if (ReloadWeapon == None) return ELR_NoInterrupt; // no weapon to AutoReload
-	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
 	ReloadContext.bSkipValidation = true; // validation done manually
@@ -244,7 +245,6 @@ static function EventListenerReturn RetroReload_AbilityActivatedListener(Object 
 	ReloadAbility = GetAbility(Unit, default.RetroReloadTemplateName, eReturnType_Copy);
 	ReloadWeapon = XComGameState_Item(GetStateObject(ReloadAbility.SourceWeapon.ObjectID, eReturnType_Copy));
 	if (ReloadWeapon == None) return ELR_NoInterrupt; // no weapon to RetroReload
-	if (IsFreeReloadPresent(ReloadWeapon, ReloadAbility, Unit)) return ELR_NoInterrupt;
 
 	ReloadContext = class'XComGameStateContext_Ability'.static.BuildContextFromAbility(ReloadAbility, Unit.ObjectID);
 	ReloadContext.bSkipValidation = true; // validation done manually
@@ -364,21 +364,6 @@ static function bool IsAllowedInConfig(XComGameState_Unit Unit, XComGameState_Ab
 		if (Present) return false;
 	}
 	return true;
-}
-
-static function bool IsFreeReloadPresent(XComGameState_Item Weapon, XComGameState_Ability Ability, XComGameState_Unit Unit)
-{
-	local array<X2WeaponUpgradeTemplate> WeaponUpgrades;
-	local X2WeaponUpgradeTemplate WeaponUpgrade;
-
-	WeaponUpgrades = Weapon.GetMyWeaponUpgradeTemplates();
-	foreach WeaponUpgrades(WeaponUpgrade)
-	{
-		if (WeaponUpgrade.FreeReloadCostFn == None) continue;
-		if (WeaponUpgrade.FreeReloadCostFn(WeaponUpgrade, Ability, Unit)) return true;
-	}
-
-	return false;
 }
 
 static function bool CanAfford(XComGameStateContext_Ability Context, XComGameState_Ability Ability, XComGameState_Unit Unit)
