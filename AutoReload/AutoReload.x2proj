@@ -30,7 +30,7 @@
     <Content Include="Src\AutoReload\Classes\X2Ability_AutoReload.uc">
       <SubType>Content</SubType>
     </Content>
-    <Content Include="Src\AutoReload\Classes\X2Condition_AutoReload_FreeReload.uc">
+    <Content Include="Src\AutoReload\Classes\X2Condition_FreeReload.uc">
       <SubType>Content</SubType>
     </Content>
     <Content Include="Src\AutoReload\Classes\X2DownloadableContentInfo_AutoReload.uc" />

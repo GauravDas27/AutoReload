@@ -43,7 +43,7 @@ static function X2AbilityTemplate ModReloadAbility(name TemplateName)
 	Template = new(None, string(TemplateName)) class'X2AbilityTemplate' (Template);
 	Template.SetTemplateName(TemplateName);
 
-	Template.AbilityShooterConditions.AddItem(new class'X2Condition_AutoReload_FreeReload');
+	Template.AbilityShooterConditions.AddItem(new class'X2Condition_FreeReload');
 
 	Template.AbilityTriggers.Length = 0;
 

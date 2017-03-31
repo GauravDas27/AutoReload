@@ -1,4 +1,4 @@
-class X2Condition_AutoReload_FreeReload extends X2Condition;
+class X2Condition_FreeReload extends X2Condition;
 
 event name CallAbilityMeetsCondition(XComGameState_Ability kAbility, XComGameState_BaseObject kTarget)
 {
