@@ -394,7 +394,9 @@ static function bool CanAfford(XComGameStateContext_Ability Context, XComGameSta
 		if (AbilityCost.CanAfford(Ability, Unit) != 'AA_Success') return false;
 
 		ActionPointCost = X2AbilityCost_ActionPoints(AbilityCost);
-		if (ActionPointCost != None && ActionPointCost.bMoveCost)
+		if (ActionPointCost == None) continue;
+
+		if (ActionPointCost.bMoveCost || X2AbilityTarget_MovingMelee(Template.AbilityTargetStyle) != None)
 		{
 			if (!CanAffordMove(ActionPointCost, Context, Ability, Unit)) return false;
 		}
@@ -423,9 +425,10 @@ static function bool CanAffordMove(X2AbilityCost_ActionPoints Cost, XComGameStat
 	else
 	{
 		ActionPointCost = 1; // move always costs atleast one action point
-		MovementPath = Context.InputContext.MovementPaths[Context.GetMovePathIndex(Unit.ObjectID)];
-		ActionPointCost += MovementPath.CostIncreases.Length; // each cost increase element requires an action point
 	}
+
+	MovementPath = Context.InputContext.MovementPaths[Context.GetMovePathIndex(Unit.ObjectID)];
+	ActionPointCost += MovementPath.CostIncreases.Length; // each cost increase element requires an action point
 	return ActionPointCost <= ActionPointsAllowed;
 }
 
